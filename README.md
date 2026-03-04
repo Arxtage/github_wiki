@@ -34,15 +34,53 @@ uvicorn app.main:app --reload
 
 The API will be available at `http://localhost:8000`. Interactive docs at `http://localhost:8000/docs`.
 
-## Usage
+## API Reference
+
+### `POST /summarize`
+
+Analyzes a GitHub repository and returns a structured summary.
+
+**Request:**
+
+- Content-Type: `application/json`
+- Body:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `github_url` | `string` | Yes | Full GitHub repository URL (e.g., `https://github.com/owner/repo`) |
+
+**Success Response (200):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `summary` | `string` | What the project does, its purpose, and key features |
+| `technologies` | `string[]` | Languages, frameworks, and notable libraries detected |
+| `structure` | `string` | How the project is organized — key directories and entry points |
+
+**Error Response (non-200):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | `string` | Always `"error"` |
+| `message` | `string` | Human-readable error description |
+
+**Error Status Codes:**
+
+| Status | Scenario |
+|--------|----------|
+| 422 | Invalid GitHub URL format or empty repository |
+| 404 | Repository not found or is private |
+| 429 | GitHub API rate limit exceeded |
+| 502 | GitHub timeout or LLM service failure |
+| 500 | Unexpected internal error |
+
+### Example
 
 ```bash
 curl -X POST http://localhost:8000/summarize \
   -H "Content-Type: application/json" \
   -d '{"github_url": "https://github.com/psf/requests"}'
 ```
-
-### Response
 
 ```json
 {
@@ -51,15 +89,6 @@ curl -X POST http://localhost:8000/summarize \
   "structure": "The project follows a standard Python package layout..."
 }
 ```
-
-### Error Responses
-
-| Status | Scenario |
-|--------|----------|
-| 422 | Invalid GitHub URL or empty repository |
-| 404 | Repository not found or private |
-| 429 | GitHub API rate limit exceeded |
-| 502 | GitHub timeout or LLM service failure |
 
 ## Design Decisions
 
